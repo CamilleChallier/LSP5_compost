@@ -102,12 +102,17 @@ class Pix2PixModel(BaseModel):
 
     def forward(self):
         self.real_A = Variable(self.input_A)
+        print("realA",self.real_A[0])
+        import matplotlib.pyplot as plt
+        plt.imshow(self.real_A[0])
         self.fake_B = self.netG.forward(self.real_A)
-        self.real_B = Variable(self.input_B)
+        self.real_B = Variable(self.input_B.shape)
 
         y,x,w,h = self.bbox
+        print(self.bbox)
         self.person_crop_real = self.real_B[:,:,y[0]:h[0],x[0]:w[0]]
         self.person_crop_fake = self.fake_B[:,:,y[0]:h[0],x[0]:w[0]]
+        print(self.person_crop_fake)
 
     # no backprop gradients
     def test(self):
@@ -145,6 +150,7 @@ class Pix2PixModel(BaseModel):
 
     def backward_D_person(self):
         #Fake
+        print(self.person_crop_fake)
         self.person_fake = self.netD_person.forward(self.person_crop_fake)
         # self.loss_D_person_fake = self.criterionGAN(self.person_fake, False)
         self.loss_D_person_fake = self.criterionGAN_person(self.person_fake, False)
@@ -181,9 +187,6 @@ class Pix2PixModel(BaseModel):
         self.loss_G = self.loss_G_GAN_image + self.loss_G_L1 + self.loss_G_GAN_person
 
         self.loss_G.backward()
-
-
-
 
     def optimize_parameters(self, only_d):
 

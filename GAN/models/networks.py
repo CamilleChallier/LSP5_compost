@@ -449,8 +449,8 @@ class SPP_NET(nn.Module):
             h_wid = int(math.ceil(previous_conv_size[0] / out_pool_size[i]))
             w_wid = int(math.ceil(previous_conv_size[1] / out_pool_size[i]))
             #add int()
-            h_pad = int((h_wid*out_pool_size[i] - previous_conv_size[0] + 1)/2)
-            w_pad = int((w_wid*out_pool_size[i] - previous_conv_size[1] + 1)/2)
+            h_pad = (h_wid*out_pool_size[i] - previous_conv_size[0] + 1)/2
+            w_pad = (w_wid*out_pool_size[i] - previous_conv_size[1] + 1)/2
             
             maxpool = nn.MaxPool2d((h_wid, w_wid), stride=(h_wid, w_wid), padding=(h_pad, w_pad))
             x = maxpool(previous_conv)
