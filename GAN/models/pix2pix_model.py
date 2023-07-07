@@ -93,7 +93,6 @@ class Pix2PixModel(BaseModel):
         AtoB = self.opt.which_direction == 'AtoB'
         input_A = input['A' if AtoB else 'B']
         input_B = input['B' if AtoB else 'A']
-        #print(input_A.size())
         self.bbox = input['bbox']
         self.input_A.resize_(input_A.size()).copy_(input_A)
         self.input_B.resize_(input_B.size()).copy_(input_B)
@@ -101,18 +100,15 @@ class Pix2PixModel(BaseModel):
         self.image_paths = input['A_paths' if AtoB else 'B_paths']
 
     def forward(self):
+
         self.real_A = Variable(self.input_A)
-        print("realA",self.real_A[0])
-        import matplotlib.pyplot as plt
-        plt.imshow(self.real_A[0])
         self.fake_B = self.netG.forward(self.real_A)
-        self.real_B = Variable(self.input_B.shape)
+        self.real_B = Variable(self.input_B)
 
         y,x,w,h = self.bbox
-        print(self.bbox)
         self.person_crop_real = self.real_B[:,:,y[0]:h[0],x[0]:w[0]]
+        #print("CA",self.person_crop_real.shape)
         self.person_crop_fake = self.fake_B[:,:,y[0]:h[0],x[0]:w[0]]
-        print(self.person_crop_fake)
 
     # no backprop gradients
     def test(self):
@@ -150,7 +146,6 @@ class Pix2PixModel(BaseModel):
 
     def backward_D_person(self):
         #Fake
-        print(self.person_crop_fake)
         self.person_fake = self.netD_person.forward(self.person_crop_fake)
         # self.loss_D_person_fake = self.criterionGAN(self.person_fake, False)
         self.loss_D_person_fake = self.criterionGAN_person(self.person_fake, False)
@@ -207,14 +202,24 @@ class Pix2PixModel(BaseModel):
             self.optimizer_G.step()
 
     def get_current_errors(self):
-        return OrderedDict([('G_GAN_image', self.loss_G_GAN_image.data[0]),
-                            ('G_GAN_person', self.loss_G_GAN_person.data[0]),
-                            ('G_L1', self.loss_G_L1.data[0]),
+
+        # return OrderedDict([('G_GAN_image', self.loss_G_GAN_image.data[0]),
+        #                     ('G_GAN_person', self.loss_G_GAN_person.data[0]),
+        #                     ('G_L1', self.loss_G_L1.data[0]),
+        #                     #('G_L1_person', self.loss_G_L1_person.data[0]),
+        #                     ('D_image_real', self.loss_D_image_real.data[0]),
+        #                     ('D_image_fake', self.loss_D_image_fake.data[0]),
+        #                     ('D_person_real', self.loss_D_person_real.data[0]),
+        #                     ('D_person_fake', self.loss_D_person_fake.data[0])
+        #                     ])
+        return OrderedDict([('G_GAN_image', self.loss_G_GAN_image.data),
+                            ('G_GAN_person', self.loss_G_GAN_person.data),
+                            ('G_L1', self.loss_G_L1.data),
                             #('G_L1_person', self.loss_G_L1_person.data[0]),
-                            ('D_image_real', self.loss_D_image_real.data[0]),
-                            ('D_image_fake', self.loss_D_image_fake.data[0]),
-                            ('D_person_real', self.loss_D_person_real.data[0]),
-                            ('D_person_fake', self.loss_D_person_fake.data[0])
+                            ('D_image_real', self.loss_D_image_real.data),
+                            ('D_image_fake', self.loss_D_image_fake.data),
+                            ('D_person_real', self.loss_D_person_real.data),
+                            ('D_person_fake', self.loss_D_person_fake.data)
                             ])
 
     def get_current_visuals(self):
