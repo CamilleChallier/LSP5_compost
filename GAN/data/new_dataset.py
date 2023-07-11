@@ -87,9 +87,9 @@ class NewDataset(BaseDataset):
 
         if bbox_y <= h_offset or bbox_x <= w_offset:
         #AB = Image.open(AB_path).convert('RGB')
-            A = A.resize((self.opt.fineSize * 2, self.opt.fineSize), Image.BICUBIC)
+            A = A.resize((self.opt.fineSize, self.opt.fineSize), Image.BICUBIC)
             A = self.transform(A)
-            B = B.resize((self.opt.fineSize * 2, self.opt.fineSize), Image.BICUBIC)
+            B = B.resize((self.opt.fineSize, self.opt.fineSize), Image.BICUBIC)
             B = self.transform(B)
             bbox = [bbox['y'], bbox['x'], bbox['w'], bbox['h']]
 
