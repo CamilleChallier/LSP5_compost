@@ -433,7 +433,7 @@ class SPP_NET(nn.Module):
         # self.fc2 = nn.Linear(4096,1000)
         #self.output = nn.Linear(21, 1)
 
-    def spatial_pyramid_pool(self,previous_conv, num_sample, previous_conv_size, out_pool_size):
+    def spatial_pyramid_pool(self, previous_conv, num_sample, previous_conv_size, out_pool_size):
         '''
         previous_conv: a tensor vector of previous convolution layer
         num_sample: an int number of image in the batch
@@ -449,8 +449,10 @@ class SPP_NET(nn.Module):
             h_wid = int(math.ceil(previous_conv_size[0] / out_pool_size[i]))
             w_wid = int(math.ceil(previous_conv_size[1] / out_pool_size[i]))
             #add int()
-            h_pad = (h_wid*out_pool_size[i] - previous_conv_size[0] + 1)/2
-            w_pad = (w_wid*out_pool_size[i] - previous_conv_size[1] + 1)/2
+            #h_pad = (h_wid*out_pool_size[i] - previous_conv_size[0] + 1)/2
+            h_pad = (h_wid*(out_pool_size[i]-1) + h_wid - previous_conv_size[0])
+            #w_pad = (w_wid*out_pool_size[i] - previous_conv_size[1] + 1)/2
+            w_pad = (w_wid*(out_pool_size[i]-1) + w_wid - previous_conv_size[1])
             
             maxpool = nn.MaxPool2d((h_wid, w_wid), stride=(h_wid, w_wid), padding=(h_pad, w_pad))
             x = maxpool(previous_conv)
@@ -479,7 +481,7 @@ class SPP_NET(nn.Module):
         x = self.LReLU4(self.BN3(x))
 
         x = self.conv5(x)
-        # print(x.size())
+        #print(x.size())
         spp = self.spatial_pyramid_pool(x,1,[int(x.size(2)),int(x.size(3))],self.output_num)
         # print(spp.size())
         # fc1 = self.fc1(spp)

@@ -99,7 +99,8 @@ class Visualizer():
         self.plot_data['Y'].append([errors[k] for k in self.plot_data['legend']])
         self.vis.line(
             X=np.stack([np.array(self.plot_data['X'])]*len(self.plot_data['legend']),1),
-            Y=np.array(self.plot_data['Y']),
+            #Y=np.array(self.plot_data['Y']),
+            Y = self.plot_data['Y'].append([errors[k] for k in self.plot_data['legend']]),
             opts={
                 'title': self.name + ' loss over time',
                 'legend': self.plot_data['legend'],

@@ -146,6 +146,7 @@ class Pix2PixModel(BaseModel):
 
     def backward_D_person(self):
         #Fake
+        #print(self.person_crop_fake.shape)
         self.person_fake = self.netD_person.forward(self.person_crop_fake)
         # self.loss_D_person_fake = self.criterionGAN(self.person_fake, False)
         self.loss_D_person_fake = self.criterionGAN_person(self.person_fake, False)
@@ -183,7 +184,7 @@ class Pix2PixModel(BaseModel):
 
         self.loss_G.backward()
 
-    def optimize_parameters(self, only_d):
+    def optimize_parameters_D(self):
 
         self.forward()
         self.optimizer_D_image.zero_grad()
@@ -194,8 +195,9 @@ class Pix2PixModel(BaseModel):
         self.optimizer_D_person.zero_grad()
         self.backward_D_person()
         self.optimizer_D_person.step()
+
+    def optimize_parameters_G(self):
         
-        if only_d == False:
             self.forward()
             self.optimizer_G.zero_grad()
             self.backward_G()

@@ -62,7 +62,9 @@ class NewDataset(BaseDataset):
         #add noise to image
         image = cv2.imread(A_path,1)      
         roi = image[bbox["y"]:bbox["h"], bbox["x"]:bbox["w"]] 
-        noise = np.random.randint(0, 256, roi.shape, dtype=np.uint8)
+        noise = np.random.randint(0, 2, size=[roi.shape[0],roi.shape[1]])
+        noise = np.where (noise ==1,255,0)
+        noise = np.repeat(noise[:, :, np.newaxis], 3, axis=2)
         image[bbox["y"]:bbox["h"], bbox["x"]:bbox["w"]] = noise
         B_path = A_path.replace('real', 'noise')
         cv2.imwrite(B_path, image)
