@@ -117,20 +117,20 @@ def replace_plastics_with_noise(path_images, path_bounding_boxes, path_save, noi
 def select_big_plastic (image_path,bbox_path, output_size, input_size):
     #select only plastics large enought
     for _, _, fnames in sorted(os.walk(image_path)): #for each folder
-        for fname in fnames[0:1000]:
+        for fname in fnames:
 
             with open(bbox_path+ os.path.splitext(fname)[0] + ".json" ) as json_file:
                 bbox = json.load(json_file)
-            h = output_size
-            w_total = output_size*2
-            size_y = input_size
-            size_x = input_size *2
+            h = output_size[0]
+            w_total = output_size[1]
+            size_y = input_size[0]
+            size_x = input_size[1]
             size_bbox = [int(bbox["h"]*h/size_y)-int(bbox["y"]*h/size_y), int(bbox["w"]*w_total/size_x)-int(bbox["x"]*w_total/size_x)] 
 
-            if size_bbox[0]<70 or size_bbox[1]<48 : # w:25 et h:70 avec crop
-                print(size_bbox)
+            if size_bbox[0]<70 or size_bbox[1]<25 : # w:25 et h:70 avec crop, mais avec 48 ca marche a voir
                 os.remove(bbox_path+ os.path.splitext(fname)[0] + ".json")
                 os.remove(image_path+ fname)
+                print("removed")
 
 def select_square_around_plastic (image_path,bbox_path,image_path_save, bbox_path_save,size) :
     for _, _, fnames in sorted(os.walk(image_path)): #for each folder
@@ -178,12 +178,12 @@ def select_square_around_plastic (image_path,bbox_path,image_path_save, bbox_pat
             with open(bbox_path_save+ os.path.splitext(fname)[0] +".json", "w") as outfile:
                 json.dump(bbox2, outfile)
 
-select_square_around_plastic ("tsinghuaDaimlerDataset/images_full/train/","tsinghuaDaimlerDataset/images_aligned/bbox/train/","tsinghuaDaimlerDataset/images_crop_bb/images/train/", "tsinghuaDaimlerDataset/images_crop_bb/bbox/train/",256)
+#select_square_around_plastic ("tsinghuaDaimlerDataset/images_full/train/","tsinghuaDaimlerDataset/images_aligned/bbox/train/","tsinghuaDaimlerDataset/images_crop_bb/images/train/", "tsinghuaDaimlerDataset/images_crop_bb/bbox/train/",256)
 
 # file_extraction('tsinghuaDaimlerDataset/tdcb_leftImg8bit_train.tar.gz','tsinghuaDaimlerDataset/images_full/test/')
 # create_bbox(path)
 # image_crop (path + "/images_full/test/","tsinghuaDaimlerDataset/images_aligned/bbox/test/", "tsinghuaDaimlerDataset/images_full_crop/test/","tsinghuaDaimlerDataset/images_aligned_crop/bbox/test/")
 # replace_plastics_with_noise( path + "/images_full_crop/test/", path + "/images_aligned_crop/bbox/test/", path + "/images_noise_crop/test/")
 # #combine
-# select_big_plastic(path + "/images_aligned_crop/images/test/", "tsinghuaDaimlerDataset/images_aligned_crop/bbox/test/", 512,1024)
+select_big_plastic(path + "/images_crop_bb/images/train/", "tsinghuaDaimlerDataset/images_crop_bb/bbox/train/", [256,256],[256,256])
 
