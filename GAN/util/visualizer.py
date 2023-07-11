@@ -4,6 +4,7 @@ import ntpath
 import time
 from . import util
 from . import html
+import torch
 
 class Visualizer():
     def __init__(self, opt):
@@ -97,10 +98,12 @@ class Visualizer():
             self.plot_data = {'X':[],'Y':[], 'legend':list(errors.keys())}
         self.plot_data['X'].append(epoch + counter_ratio)
         self.plot_data['Y'].append([errors[k] for k in self.plot_data['legend']])
+        #print(self.plot_data['Y'])
+        #print(np.array([torch.stack(sublist).cpu().numpy() for sublist in self.plot_data['Y']]))
         self.vis.line(
             X=np.stack([np.array(self.plot_data['X'])]*len(self.plot_data['legend']),1),
-            #Y=np.array(self.plot_data['Y']),
-            Y = self.plot_data['Y'].append([errors[k] for k in self.plot_data['legend']]),
+            #Y=np.array(torch.stack(self.plot_data['Y'])),
+            Y = np.array([torch.stack(sublist).cpu().numpy() for sublist in self.plot_data['Y']]),
             opts={
                 'title': self.name + ' loss over time',
                 'legend': self.plot_data['legend'],
