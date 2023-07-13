@@ -81,10 +81,10 @@ def image_resize(image_path, bbox_path, image_path_save, bbox_path_save, size=28
 
     AB.save(image_path_save)
 
-def replace_plastics_with_noise(path_images, path_bounding_boxes, path_save, noise = "b_w"):
+def replace_plastics_with_noise(path_images, path_bounding_boxes, path_save, noise_fct):
     # Iterate over the bounding boxes
     for _, _, fnames in sorted(os.walk(path_images)): 
-        for fname in tqdm(fname) :
+        for fname in tqdm(fnames) :
         
             image = cv2.imread(path_images + fname,1)
 
@@ -93,18 +93,22 @@ def replace_plastics_with_noise(path_images, path_bounding_boxes, path_save, noi
             
             roi = image[bbox["y"]:bbox["h"], bbox["x"]:bbox["w"]] 
 
-            if (noise == "b_w") :
+            if (noise_fct == "b_w") :
                 noise = np.random.randint(0, 2, size=[roi.shape[0],roi.shape[1]])
                 noise = np.where (noise ==1,255,0)
                 noise = np.repeat(noise[:, :, np.newaxis], 3, axis=2)
-            if ( noise =="color") :
+            if ( noise_fct =="color") :
                 noise = np.random.randint(0, 256, roi.shape, dtype=np.uint8)
-            if (noise == "gaussian") :
-                mean = 0
-                var = 0.1
-                sigma = var**0.5
-                noise = np.random.normal(mean,sigma,roi.shape)
-                noise = noise.reshape(roi.shape)*255
+            if (noise_fct == "gaussian") :
+                noise=np.zeros(roi.shape,dtype=np.uint8)
+                cv2.randn(noise,(128,128,128),(20,20,20))
+                noise=(noise).astype(np.uint8)
+            if (noise_fct =="gaussian_b_w") :
+                noise=np.zeros([roi.shape[0],roi.shape[1]],dtype=np.uint8)
+                cv2.randn(noise,128,20)
+                noise=(noise).astype(np.uint8)
+                noise = np.repeat(noise[:, :, np.newaxis], 3, axis=2)
+                noise = noise.reshape(roi.shape)
 
             # Replace the ROI with random noise
             image[bbox["y"]:bbox["h"], bbox["x"]:bbox["w"]] = noise
@@ -114,7 +118,7 @@ def replace_plastics_with_noise(path_images, path_bounding_boxes, path_save, noi
             im_path = path_save + fname
             cv2.imwrite(im_path, image)
 
-def select_big_plastic (image_path,bbox_path, output_size, input_size):
+def select_big_plastic (image_path, bbox_path, output_size, input_size):
     #select only plastics large enought
     for _, _, fnames in sorted(os.walk(image_path)): #for each folder
         for fname in fnames:
@@ -127,7 +131,7 @@ def select_big_plastic (image_path,bbox_path, output_size, input_size):
             size_x = input_size[1]
             size_bbox = [int(bbox["h"]*h/size_y)-int(bbox["y"]*h/size_y), int(bbox["w"]*w_total/size_x)-int(bbox["x"]*w_total/size_x)] 
 
-            if size_bbox[0]<70 or size_bbox[1]<25 : # w:25 et h:70 avec crop, mais avec 48 ca marche a voir
+            if size_bbox[0]<70 or size_bbox[1]<48 : # w:25 et h:70 avec crop, mais avec 48 ca marche a voir
                 os.remove(bbox_path+ os.path.splitext(fname)[0] + ".json")
                 os.remove(image_path+ fname)
                 print("removed")
@@ -141,7 +145,7 @@ def select_square_around_plastic (image_path,bbox_path,image_path_save, bbox_pat
                 bbox = json.load(json_file)
             size_bbox = [bbox["h"]-bbox["y"], bbox["w"]-bbox["x"]]
 
-            if size_bbox[0] > size or size_bbox[1] > size :
+            while size_bbox[0] > size or size_bbox[1] > size :
                 AB = AB.resize((int(width/2),int(height/2)), Image.BICUBIC)
                 bbox = {"y": int(bbox["y"]/2), "x": int(bbox["x"]/2), "w": int(bbox["w"]/2), "h": int(bbox["h"]/2)}
                 size_bbox = [bbox["h"]-bbox["y"], bbox["w"]-bbox["x"]]
@@ -183,7 +187,8 @@ def select_square_around_plastic (image_path,bbox_path,image_path_save, bbox_pat
 # file_extraction('tsinghuaDaimlerDataset/tdcb_leftImg8bit_train.tar.gz','tsinghuaDaimlerDataset/images_full/test/')
 # create_bbox(path)
 # image_crop (path + "/images_full/test/","tsinghuaDaimlerDataset/images_aligned/bbox/test/", "tsinghuaDaimlerDataset/images_full_crop/test/","tsinghuaDaimlerDataset/images_aligned_crop/bbox/test/")
-# replace_plastics_with_noise( path + "/images_full_crop/test/", path + "/images_aligned_crop/bbox/test/", path + "/images_noise_crop/test/")
+#replace_plastics_with_noise( path + "/images_crop_bb/images/train/", path + "/images_crop_bb/bbox/train/", path + "/images_crop_bb_gaussian/images/train/", "gaussian")
 # #combine
-select_big_plastic(path + "/images_crop_bb/images/train/", "tsinghuaDaimlerDataset/images_crop_bb/bbox/train/", [256,256],[256,256])
+select_big_plastic(path + "/images_aligned_bb/images/train/", "tsinghuaDaimlerDataset/images_crop_bb/bbox/train/", [256,256],[256,256])
 
+# python GAN/datasets/combine_A_and_B.py --fold_A /app/LSP5_compost/data_preprocessing/tsinghuaDaimlerDataset/images_crop_bb/images  --fold_B /app/LSP5_compost/data_preprocessing/tsinghuaDaimlerDataset/images_crop_bb_gaussian/images --fold_AB /app/LSP5_compost/data_preprocessing/tsinghuaDaimlerDataset/images_aligned_bb/images2
