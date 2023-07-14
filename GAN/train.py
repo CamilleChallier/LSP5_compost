@@ -31,7 +31,7 @@ CRITIC_ITERS = 5
 total_steps = 0
 iter_d = 0
 only_d = False
-step_opti_G = 3
+step_opti_G = 2
 
 for epoch in range(1, opt.niter + opt.niter_decay + 1): # outer loop for different epochs; we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>
     epoch_start_time = time.time() # timer for entire epoch

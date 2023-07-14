@@ -1,0 +1,26 @@
+{
+    "images": [
+        {
+            "id": 0,
+            "width": 0,
+            "height": 0,
+            "file_name": "name_1.jpg",
+            "license": null,
+            "flickr_url": null,
+            "coco_url": null,
+            "date_captured": null,
+            "flickr_640_url": null
+        }
+    ],
+    "categories": [],
+    "annotations": [],
+    "licenses": [],
+    "info": {
+        "year": 0,
+        "version": "",
+        "description": "",
+        "contributor": "",
+        "url": "",
+        "date_created": ""
+    }
+}

@@ -454,6 +454,7 @@ class SPP_NET(nn.Module):
             #w_pad = (w_wid*out_pool_size[i] - previous_conv_size[1] + 1)/2
             w_pad = (w_wid*(out_pool_size[i]-1) + w_wid - previous_conv_size[1])
             
+            #print("maxpool", h_wid, w_wid, h_pad, w_pad)
             maxpool = nn.MaxPool2d((h_wid, w_wid), stride=(h_wid, w_wid), padding=(h_pad, w_pad))
             x = maxpool(previous_conv)
             if(i == 0):

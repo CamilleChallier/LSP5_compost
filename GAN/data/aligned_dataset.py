@@ -70,27 +70,27 @@ class AlignedDataset(BaseDataset):
         bbox_w = max(int((bbox['w']/self.opt.fineSize)*self.opt.loadSize), 0)
         bbox_h = max(int((bbox['h']/self.opt.fineSize)*self.opt.loadSize), 0)
 
-        if bbox_y <= h_offset or bbox_x <= w_offset:
+        #if bbox_y <= h_offset or bbox_x <= w_offset:
         #AB = Image.open(AB_path).convert('RGB')
-            AB = AB.resize((self.opt.fineSize * 2, self.opt.fineSize), Image.BICUBIC)
-            AB = self.transform(AB)
-            A = AB[:, :self.opt.fineSize,
-                :self.opt.fineSize]
-            B = AB[:, :self.opt.fineSize,
-                self.opt.fineSize:2*self.opt.fineSize]
-            bbox = [bbox['y'], bbox['x'], bbox['w'], bbox['h']]
-        else:
+        AB = AB.resize((self.opt.fineSize * 2, self.opt.fineSize), Image.BICUBIC)
+        AB = self.transform(AB)
+        A = AB[:, :self.opt.fineSize,
+            :self.opt.fineSize]
+        B = AB[:, :self.opt.fineSize,
+            self.opt.fineSize:2*self.opt.fineSize]
+        bbox = [bbox['y'], bbox['x'], bbox['w'], bbox['h']]
+        # else:
 
-            #AB = Image.open(AB_path).convert('RGB')
-            AB = AB.resize((self.opt.loadSize * 2, self.opt.loadSize), Image.BICUBIC)
-            AB = self.transform(AB)
-            A = AB[:, h_offset:h_offset + self.opt.fineSize,
-               w_offset:w_offset + self.opt.fineSize]
+        #     #AB = Image.open(AB_path).convert('RGB')
+        #     AB = AB.resize((self.opt.loadSize * 2, self.opt.loadSize), Image.BICUBIC)
+        #     AB = self.transform(AB)
+        #     A = AB[:, h_offset:h_offset + self.opt.fineSize,
+        #        w_offset:w_offset + self.opt.fineSize]
             
-            B = AB[:, h_offset:h_offset + self.opt.fineSize,
-                w + w_offset:w + w_offset + self.opt.fineSize]
-           #bbox = [bbox_y-h_offset, bbox_x-w_offset, bbox_w, bbox_h]
-            bbox = [bbox_y-h_offset, bbox_x-w_offset, bbox_w-w_offset, bbox_h-h_offset]
+        #     B = AB[:, h_offset:h_offset + self.opt.fineSize,
+        #         w + w_offset:w + w_offset + self.opt.fineSize]
+        #    #bbox = [bbox_y-h_offset, bbox_x-w_offset, bbox_w, bbox_h]
+        #     bbox = [bbox_y-h_offset, bbox_x-w_offset, bbox_w-w_offset, bbox_h-h_offset]
         
 
         if (not self.opt.no_flip) and random.random() < 0.5:

@@ -1,0 +1,21 @@
+{
+    "images": [
+        {
+            "id": 0,
+            "width": 0,
+            "height": 0,
+            "file_name": "name_1.jpg"
+        }
+    ],
+    "categories": [],
+    "annotations": [],
+    "licenses": [],
+    "info": {
+        "year": 0,
+        "version": "",
+        "description": "",
+        "contributor": "",
+        "url": "",
+        "date_created": ""
+    }
+}
