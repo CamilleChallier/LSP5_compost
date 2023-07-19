@@ -56,6 +56,7 @@ class AlignedDataset(BaseDataset):
         h = self.opt.loadSize
         w_offset = random.randint(0, max(0, w - self.opt.fineSize - 1))
         h_offset = random.randint(0, max(0, h - self.opt.fineSize - 1))
+        #print(w_offset,h_offset)
 
         bbox = json.load(open(bbox_path))
         #6 lines added
@@ -70,27 +71,35 @@ class AlignedDataset(BaseDataset):
         bbox_w = max(int((bbox['w']/self.opt.fineSize)*self.opt.loadSize), 0)
         bbox_h = max(int((bbox['h']/self.opt.fineSize)*self.opt.loadSize), 0)
 
-        #if bbox_y <= h_offset or bbox_x <= w_offset:
-        #AB = Image.open(AB_path).convert('RGB')
-        AB = AB.resize((self.opt.fineSize * 2, self.opt.fineSize), Image.BICUBIC)
-        AB = self.transform(AB)
-        A = AB[:, :self.opt.fineSize,
-            :self.opt.fineSize]
-        B = AB[:, :self.opt.fineSize,
-            self.opt.fineSize:2*self.opt.fineSize]
-        bbox = [bbox['y'], bbox['x'], bbox['w'], bbox['h']]
-        # else:
+        bbox_size = [bbox["h"]-bbox["y"],bbox["w"]-bbox["x"]]
 
-        #     #AB = Image.open(AB_path).convert('RGB')
-        #     AB = AB.resize((self.opt.loadSize * 2, self.opt.loadSize), Image.BICUBIC)
-        #     AB = self.transform(AB)
-        #     A = AB[:, h_offset:h_offset + self.opt.fineSize,
-        #        w_offset:w_offset + self.opt.fineSize]
+        #print("0:",bbox_size)
+
+        if bbox_y <= h_offset or bbox_x <= w_offset or bbox_h <= h_offset or bbox_w <= w_offset or bbox_y >= h_offset + size_y or bbox_x >= w_offset +size_x/2 or bbox_h >= h_offset +size_y or bbox_w >= w_offset + size_x/2  :
+        #AB = Image.open(AB_path).convert('RGB')
+            AB = AB.resize((self.opt.fineSize * 2, self.opt.fineSize), Image.BICUBIC)
+            AB = self.transform(AB)
+            A = AB[:, :self.opt.fineSize,
+                :self.opt.fineSize]
+            B = AB[:, :self.opt.fineSize,
+                self.opt.fineSize:2*self.opt.fineSize]
+            bbox = [bbox['y'], bbox['x'], bbox['w'], bbox['h']]
+            #bbox_size = [bbox[3]-bbox[0],bbox[2]-bbox[1]]
+            #print("1:",bbox_size)
+        else:
+
+            #AB = Image.open(AB_path).convert('RGB')
+            AB = AB.resize((self.opt.loadSize * 2, self.opt.loadSize), Image.BICUBIC)
+            AB = self.transform(AB)
+            A = AB[:, h_offset:h_offset + self.opt.fineSize,
+                w_offset:w_offset + self.opt.fineSize]
             
-        #     B = AB[:, h_offset:h_offset + self.opt.fineSize,
-        #         w + w_offset:w + w_offset + self.opt.fineSize]
-        #    #bbox = [bbox_y-h_offset, bbox_x-w_offset, bbox_w, bbox_h]
-        #     bbox = [bbox_y-h_offset, bbox_x-w_offset, bbox_w-w_offset, bbox_h-h_offset]
+            B = AB[:, h_offset:h_offset + self.opt.fineSize,
+                w + w_offset:w + w_offset + self.opt.fineSize]
+            #bbox = [bbox_y-h_offset, bbox_x-w_offset, bbox_w, bbox_h]
+            bbox = [bbox_y-h_offset, bbox_x-w_offset, bbox_w-w_offset, bbox_h-h_offset]
+            #bbox_size = [bbox[3]-bbox[0],bbox[2]-bbox[1]]
+            #print("2:",bbox_size)
         
 
         if (not self.opt.no_flip) and random.random() < 0.5:
@@ -98,9 +107,7 @@ class AlignedDataset(BaseDataset):
             idx = torch.LongTensor(idx)
             A = A.index_select(2, idx)
             B = B.index_select(2, idx)
-            #print A.size(2)
             bbox = [bbox[0], A.size(2) - bbox[2], A.size(2) - bbox[1], bbox[3]]
-        # print(bbox)
         return {'A': A, 'B': B, 'bbox': bbox,
                 'A_paths': AB_path, 'B_paths': AB_path}
 

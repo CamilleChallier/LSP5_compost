@@ -31,11 +31,12 @@ CRITIC_ITERS = 5
 total_steps = 0
 iter_d = 0
 only_d = False
-step_opti_G = 2
+step_opti_G = 3
 
 for epoch in range(1, opt.niter + opt.niter_decay + 1): # outer loop for different epochs; we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>
     epoch_start_time = time.time() # timer for entire epoch
     for i, data in enumerate(dataset):  # inner loop within one epoch
+        #print(i, data["A_paths"])
         iter_start_time = time.time() # timer for computation per iteration
         total_steps += opt.batchSize
         epoch_iter = total_steps - dataset_size * (epoch - 1)

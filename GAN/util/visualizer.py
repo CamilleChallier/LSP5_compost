@@ -94,12 +94,15 @@ class Visualizer():
 
     # errors: dictionary of error labels and values
     def plot_current_errors(self, epoch, counter_ratio, opt, errors):
+        # print("epoch", epoch)
+        # print(counter_ratio)
+        # print("errors", errors)
         if not hasattr(self, 'plot_data'):
             self.plot_data = {'X':[],'Y':[], 'legend':list(errors.keys())}
         self.plot_data['X'].append(epoch + counter_ratio)
         self.plot_data['Y'].append([errors[k] for k in self.plot_data['legend']])
-        #print(self.plot_data['Y'])
-        #print(np.array([torch.stack(sublist).cpu().numpy() for sublist in self.plot_data['Y']]))
+        # print(self.plot_data['Y'])
+        # print(np.array([torch.stack(sublist).cpu().numpy() for sublist in self.plot_data['Y']]))
         self.vis.line(
             X=np.stack([np.array(self.plot_data['X'])]*len(self.plot_data['legend']),1),
             #Y=np.array(torch.stack(self.plot_data['Y'])),

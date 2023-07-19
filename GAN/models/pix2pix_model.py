@@ -96,7 +96,8 @@ class Pix2PixModel(BaseModel):
         self.bbox = input['bbox']
         self.input_A.resize_(input_A.size()).copy_(input_A)
         self.input_B.resize_(input_B.size()).copy_(input_B)
-        
+        #print("set_input", self.input_B.shape)
+
         self.image_paths = input['A_paths' if AtoB else 'B_paths']
 
     def forward(self):
@@ -146,7 +147,6 @@ class Pix2PixModel(BaseModel):
 
     def backward_D_person(self):
         #Fake
-        #print(self.person_crop_fake.shape)
         self.person_fake = self.netD_person.forward(self.person_crop_fake)
         # self.loss_D_person_fake = self.criterionGAN(self.person_fake, False)
         self.loss_D_person_fake = self.criterionGAN_person(self.person_fake, False)

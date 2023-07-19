@@ -448,15 +448,18 @@ class SPP_NET(nn.Module):
 
             h_wid = int(math.ceil(previous_conv_size[0] / out_pool_size[i]))
             w_wid = int(math.ceil(previous_conv_size[1] / out_pool_size[i]))
-            #add int()
+
             #h_pad = (h_wid*out_pool_size[i] - previous_conv_size[0] + 1)/2
-            h_pad = (h_wid*(out_pool_size[i]-1) + h_wid - previous_conv_size[0])
+            h_pad = math.ceil((h_wid*out_pool_size[i] - previous_conv_size[0])/2)
             #w_pad = (w_wid*out_pool_size[i] - previous_conv_size[1] + 1)/2
-            w_pad = (w_wid*(out_pool_size[i]-1) + w_wid - previous_conv_size[1])
+            w_pad = math.ceil((w_wid*out_pool_size[i] - previous_conv_size[1])/2)
+            #print("gg",previous_conv_size[0],out_pool_size[i], h_wid,h_pad )
+            #print("gk",previous_conv_size[1],out_pool_size[i], w_wid,w_pad )
             
             #print("maxpool", h_wid, w_wid, h_pad, w_pad)
             maxpool = nn.MaxPool2d((h_wid, w_wid), stride=(h_wid, w_wid), padding=(h_pad, w_pad))
             x = maxpool(previous_conv)
+            #print(x.shape)
             if(i == 0):
                 spp = x.view(num_sample,-1)
                 # print("spp size:",spp.size())
@@ -466,6 +469,7 @@ class SPP_NET(nn.Module):
         return spp
 
     def forward(self,x):
+        #print(x.shape)
         x = self.conv1(x)
         x = self.LReLU1(x)
 
@@ -484,7 +488,6 @@ class SPP_NET(nn.Module):
         x = self.conv5(x)
         #print(x.size())
         spp = self.spatial_pyramid_pool(x,1,[int(x.size(2)),int(x.size(3))],self.output_num)
-        # print(spp.size())
         # fc1 = self.fc1(spp)
         # fc2 = self.fc2(fc1)
         # s = nn.Sigmoid()
