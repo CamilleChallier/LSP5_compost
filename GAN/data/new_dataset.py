@@ -85,7 +85,8 @@ class NewDataset(BaseDataset):
         bbox_w = max(int((bbox['w']/self.opt.fineSize)*self.opt.loadSize), 0)
         bbox_h = max(int((bbox['h']/self.opt.fineSize)*self.opt.loadSize), 0)
 
-        if bbox_y <= h_offset or bbox_x <= w_offset:
+        if bbox_y <= h_offset or bbox_x <= w_offset or bbox_h <= h_offset or bbox_w <= w_offset or bbox_y >= h_offset + size_y or bbox_x >= w_offset +size_x/2 or bbox_h >= h_offset +size_y or bbox_w >= w_offset + size_x/2  :
+
         #AB = Image.open(AB_path).convert('RGB')
             A = A.resize((self.opt.fineSize, self.opt.fineSize), Image.BICUBIC)
             A = self.transform(A)

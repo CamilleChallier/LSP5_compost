@@ -11,9 +11,17 @@ import collections
 # |imtype|: the desired type of the converted numpy array
 def tensor2im(image_tensor, imtype=np.uint8):
     image_numpy = image_tensor[0].cpu().float().numpy()
-    #print(image_numpy.shape)
-    image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0
+    image_numpy = (np.transpose(image_numpy, (1, 2, 0))+1) / 2.0 * 255.0
     return image_numpy.astype(imtype)
+
+# def tensor2im(tensor):
+#     tensor = (tensor+1)*255
+#     tensor = tensor[0].cpu().float().numpy()
+#     tensor = np.array(tensor, dtype=np.uint8)
+#     # if np.ndim(tensor)>3:
+#     #     assert tensor.shape[0] == 1
+#     #     tensor = tensor[0]
+#     return Image.fromarray(tensor)
 
 def tensor2pil(image_tensor, bbox, imtype=np.uint8):
     image_numpy = image_tensor[0].cpu().float().numpy()

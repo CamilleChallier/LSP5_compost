@@ -93,7 +93,7 @@ class Visualizer():
             webpage.save()
 
     # errors: dictionary of error labels and values
-    def plot_current_errors(self, epoch, counter_ratio, opt, errors):
+    def plot_current_errors(self, epoch, counter_ratio, opt, errors) :
         # print("epoch", epoch)
         # print(counter_ratio)
         # print("errors", errors)
