@@ -35,51 +35,65 @@ def generate_random_coordinate(width, height, bbox_list):
 
 class Data_Processing():
 	'''Data loader and pre-processing steps for images data'''
-	def __init__(self, save_path,size_images=256 ) -> None:
-		self.full_images_path = save_path + "images_crop/"
+	def __init__(self, save_path,size_images=256, with_mask = False ) -> None:
+		self.full_images_path = save_path + "images/"
 		self.bbox_path = save_path + "bbox/"
 		self.location_path = save_path + "location/"
-		self.noise_path = save_path + "images_noise/"
-		self.image_aligned_path = save_path + "images/"
+		#self.noise_path = save_path + "images_noise/"
+		#self.image_aligned_path = save_path + "images/"
 		self.generated_data = save_path +"generated_data/"
 		self.size_images = size_images
+		self.with_mask = with_mask
 	
 	def get_full_images_path(self) :
 		return self.full_images_path
     
-	def get_noise_path(self) :
-		return self.noise_path
+	# def get_noise_path(self) :
+	# 	return self.noise_path
     
-	def get_image_aligned_path(self) :
-		return self.image_aligned_path
+	# def get_image_aligned_path(self) :
+	# 	return self.image_aligned_path
 
 	def get_bbox_path(self) :
 		return self.bbox_path
 	
 	def get_location_path(self) :
 		return self.location_path
-	
+
 	def create_folders(self) :
 		os.makedirs(self.get_bbox_path(), exist_ok=True)
-		os.makedirs(self.get_noise_path(), exist_ok=True)
+		#os.makedirs(self.get_noise_path(), exist_ok=True)
 		os.makedirs(self.get_full_images_path(), exist_ok=True)
-		os.makedirs(self.get_image_aligned_path(), exist_ok=True)
+		# os.makedirs(self.get_image_aligned_path(), exist_ok=True)
 		os.makedirs(self.get_location_path(), exist_ok=True)
-
-	def image_crop (self, handler, img_root_dir) :
-		for img_name in handler.img_name_list: 
+	
+	def image_crop (self, handler, root_dir) :
+		for img_name in handler.img_name_list[0:1]: 
 			
-			image = handler.load_image(img_root_dir, img_name = img_name)
+			image = handler.load_image(root_dir + "images", img_name = img_name)
+
+			if self.with_mask :
+
+				mask = Image.open(os.path.join(root_dir+"masks/", img_name +".png"))
+				arr_img1 = np.array(image)
+				arr_img2 = np.array(mask.convert('L'))
+				arr_img2_resized = arr_img2[..., np.newaxis]  # Add a new axis at the end to make it (256, 256, 1)
+				final_image = Image.fromarray(np.concatenate((arr_img1, arr_img2_resized), axis=2))
+			else :
+				final_image = image
+
 			for annot in handler.get_img_annots(img_name=img_name):
-				width, height = image.size
-				img = image
+				width, height = final_image.size
+				img = final_image
 				bbox = annot.bbox
 				bbox = {"y": bbox[1], "x": bbox[0], "w": bbox[0] + bbox[2], "h": bbox[1] + bbox[3]}
 				size_bbox = [bbox["h"]-bbox["y"], bbox["w"]-bbox["x"]]
+				factor = 1
 
 				while size_bbox[0] > self.size_images or size_bbox[1] > self.size_images :
 					#print("image_too_large")
 					img = img.resize((int(width/2),int(height/2)), Image.BICUBIC)
+					factor *=2
 					bbox = {"y": int(bbox["y"]/2), "x": int(bbox["x"]/2), "w": int(bbox["w"]/2), "h": int(bbox["h"]/2)}
 					size_bbox = [bbox["h"]-bbox["y"], bbox["w"]-bbox["x"]]
 					width, height = img.size
@@ -114,12 +128,13 @@ class Data_Processing():
 				bbox = {"y": bbox["y"]-bottom, "x": bbox["x"]-left, "w": bbox["w"]-left, "h": bbox["h"]-bottom}
 
 				img = img.crop((left,bottom,right,top))
+				
+				location = {"left": left*factor, "bottom":bottom*factor, "right": right*factor, "top": top*factor}
 
-				location = {"left": left, "bottom":bottom, "right": right, "top": top}
-
-				im_path = self.full_images_path + img_name + "_annot" + str(annot.id) + ".jpg"
+				im_path = self.full_images_path + img_name + "_annot" + str(annot.id) + ".png"
 				bbox_path = self.bbox_path + img_name + "_annot" + str(annot.id) + ".json"
 				location_path = self.location_path + img_name + "_annot" + str(annot.id) + ".json"
+
 				img.save(im_path)
 				with open(location_path, "w") as outfile:
 					json.dump(location, outfile)
@@ -128,11 +143,21 @@ class Data_Processing():
 					json.dump(bbox, outfile)
 
 	
-	def select_empty_background (self, handler,img_root_dir) :
+	def select_empty_background (self, handler,root_dir) :
 
 		for img_name in handler.img_name_list : 
-			image = handler.load_image(img_root_dir, img_name = img_name)
-			width, height = image.size
+			image = handler.load_image(root_dir + "images", img_name = img_name)
+
+			if self.with_mask :
+				mask = Image.open(os.path.join(root_dir+"masks/", img_name +".png"))
+				arr_img1 = np.array(image)
+				arr_img2 = np.array(mask.convert('L'))
+				arr_img2_resized = arr_img2[..., np.newaxis]  # Add a new axis at the end to make it (256, 256, 1)
+				final_image = Image.fromarray(np.concatenate((arr_img1, arr_img2_resized), axis=2))
+			else :
+				final_image = image
+
+			width, height = final_image.size
 
 			bbox_list = [annot.bbox for annot in handler.get_img_annots(img_name=img_name) ]
 			random_coordinate = generate_random_coordinate(width, height, bbox_list)
@@ -144,7 +169,7 @@ class Data_Processing():
 			top = random_coordinate[1] + self.size_images
 			right = random_coordinate[0] +self.size_images
 			bottom = random_coordinate[1]
-			img = image.crop((left,bottom,right,top))
+			img = final_image.crop((left,bottom,right,top))
 
 			location = {"left": left, "bottom":bottom, "right": right, "top": top}
 			w = random.randint(35,200)
@@ -154,11 +179,11 @@ class Data_Processing():
 			
 			bbox = {"y": y, "x": x , "w": x + w , "h": y +h}
 
-			im_path = self.full_images_path + img_name + ".jpg"
+			im_path = self.full_images_path + img_name + ".png"
 			bbox_path = self.bbox_path + img_name + ".json"
 			location_path = self.location_path + img_name + ".json"
-			img.save(im_path)
 
+			img.save(im_path)
 			with open(location_path, "w") as outfile:
 				json.dump(location, outfile)
 
@@ -198,43 +223,56 @@ class Data_Processing():
 		for _, _, fnames in sorted(os.walk(self.full_images_path)): 
 			for fname in tqdm(fnames) :
 			
-				image = cv2.imread(self.full_images_path + fname,1)
+				image = np.array(Image.open(os.path.join(self.full_images_path + fname)))
 
 				with open(self.bbox_path + os.path.splitext(fname)[0] + ".json" ) as json_file:
 					bbox = json.load(json_file)
 
 				roi = image[bbox["y"]:bbox["h"], bbox["x"]:bbox["w"]] 
 
+				if self.with_mask : 
+					channel_nb = 4
+				else : 
+					channel_nb =3
+					
 				if (noise_fct == "b_w") :
 					noise = np.random.randint(0, 2, size=[roi.shape[0],roi.shape[1]])
 					noise = np.where (noise ==1,255,0)
-					noise = np.repeat(noise[:, :, np.newaxis], 3, axis=2)
+					noise = np.repeat(noise[:, :, np.newaxis], channel_nb, axis=2)
 				if ( noise_fct =="color") :
 					noise = np.random.randint(0, 256, roi.shape, dtype=np.uint8)
 				if (noise_fct == "gaussian") :
 					noise=np.zeros(roi.shape,dtype=np.uint8)
-					cv2.randn(noise,(128,128,128),(20,20,20))
+					cv2.randn(noise,(((128, ) * channel_nb)),((20, ) * channel_nb))
 					noise=(noise).astype(np.uint8)
 				if (noise_fct =="gaussian_b_w") :
 					noise=np.zeros([roi.shape[0],roi.shape[1]],dtype=np.uint8)
 					cv2.randn(noise,128,20)
 					noise=(noise).astype(np.uint8)
-					noise = np.repeat(noise[:, :, np.newaxis], 3, axis=2)
+					noise = np.repeat(noise[:, :, np.newaxis], channel_nb, axis=2)
 					noise = noise.reshape(roi.shape)
 
 				# Replace the ROI with random noise
 				image[bbox["y"]:bbox["h"], bbox["x"]:bbox["w"]] = noise
 
+				# print(noise[:,:,1])
+				# plt.imshow(noise[:,:,0:3])
+				# plt.show()
+
+				
+				# plt.imshow(image[:,:,0:3])
+				# plt.show()
+
 				im_path = self.noise_path + fname
-				cv2.imwrite(im_path, image)
+				Image.fromarray(image).save(im_path)
 
 	def split_train_test (self, camera_names) :
 		# Create the train and test set directories if they don't exist
 
-		destination_images_train = self.image_aligned_path + "/train/"
-		destination_images_test = self.image_aligned_path + "test/"
+		destination_images_train = self.full_images_path + "/train/"
+		destination_images_test = self.full_images_path + "test/"
 		destination_bbox_train = self.bbox_path +"train/"
-		destination_bbox_test =  self.bbox_path +" test/"
+		destination_bbox_test =  self.bbox_path +"test/"
 
 		os.makedirs(destination_images_train, exist_ok=True)
 		os.makedirs(destination_images_test, exist_ok=True)
@@ -253,14 +291,14 @@ class Data_Processing():
 
 		# Iterate over the camera names and copy the corresponding images to the train or test set directories
 		i =0
-		for fname in os.listdir(self.image_aligned_path):
+		for fname in os.listdir(self.full_images_path):
 			#print(fname)
 			if any(s in fname for s in camera_train):
 				i +=1
-				shutil.move(self.image_aligned_path + fname, destination_images_train)
+				shutil.move(self.full_images_path + fname, destination_images_train)
 				shutil.move(self.bbox_path + os.path.splitext(fname)[0] + ".json", destination_bbox_train)
 			elif any(s in fname for s in camera_test):
-				shutil.move(self.image_aligned_path + fname, destination_images_test)
+				shutil.move(self.full_images_path + fname, destination_images_test)
 				shutil.move(self.bbox_path + os.path.splitext(fname)[0] + ".json", destination_bbox_test)
 
 	def combine_images (self) :
@@ -268,18 +306,19 @@ class Data_Processing():
 			path_A = self.full_images_path +  fname
 			path_B = self.noise_path +  fname
 			if os.path.isfile(path_A) and os.path.isfile(path_B):
-				im_A = cv2.imread(path_A, 1) # python2: cv2.CV_LOAD_IMAGE_COLOR; python3: cv2.IMREAD_COLOR
-				im_B = cv2.imread(path_B, 1) # python2: cv2.CV_LOAD_IMAGE_COLOR; python3: cv2.IMREAD_COLOR
+				
+				im_A = np.array(Image.open(os.path.join(path_A)))
+				im_B = np.array(Image.open(os.path.join(path_B)))
 				im_AB = np.concatenate([im_A, im_B], 1)
-				cv2.imwrite(self.image_aligned_path + fname, im_AB)
+				
+				Image.fromarray(im_AB).save(self.image_aligned_path + fname)
 
-	def paste_generated_data (self, path_result,handler, img_root_dir) :
+	def paste_generated_data (self, path_result, root_dir) :
 		os.makedirs(self.generated_data, exist_ok=True)
 
-		for fname in os.listdir(path_result)[30:40]:
-			if fname.split('_')[-1] == "display.png" : 
-				img_name = fname.rsplit('_', 1)[0]
-				print(img_name)
+		for fname in os.listdir(path_result):
+			if '_'.join(fname.split('_')[-2:]) == "fake_B.png" : 
+				img_name = fname.rsplit('_', 2)[0]
 				if img_name.split('_')[-1][0:5] == "annot" :
 					big_img_name = img_name.rsplit('_', 1)[0]
 				else :
@@ -290,67 +329,74 @@ class Data_Processing():
 				else :
 					big_img_name = big_img_name +".jpg"
 
-				print(os.path.join(img_root_dir, big_img_name))
-				image = cv2.imread(os.path.join(img_root_dir, big_img_name),1)
-				plt.imshow(image)
-				plt.show()
-				print(image.shape)
-				print(big_img_name)
+				image = np.array(Image.open(os.path.join(root_dir +"/images", big_img_name)))
 
-				result = cv2.imread(path_result + "/"+ fname,1)
-				print(result.shape)
-				plt.imshow(result)
-				plt.show()
+				result = np.array(Image.open(path_result + "/"+ fname))
 
-				ret = cv2.imread("/home/ccamille/biowaste_GAN/LSP5_compost/UAVVaste_data_wb/images_crop/BATCH_d06_img_1750.jpg",1)
-				print(ret.shape)
-				plt.imshow(ret)
-				plt.show()
-
-				print(self.location_path +img_name + ".json" )
 				with open(self.location_path +img_name + ".json" ) as json_file:
 					crop = json.load(json_file)
-				print(crop)
+
 				image[crop["bottom"]:crop["top"],crop["left"]:crop["right"], :] = result
-				#cv2.imwrite(self.generated_data, image)
-				plt.imshow(image)
-				plt.show()
+				Image.fromarray(image).save(self.generated_data + img_name + ".png")
+
+
+			if '_'.join(fname.split('_')[-3:]) == "fake_B_mask.png" : 
+				mask_name = fname.rsplit('_', 3)[0]
+
+				if mask_name.split('_')[-1][0:5] == "annot" :
+					big_mask_name = mask_name.rsplit('_', 1)[0]
+				else :
+					big_mask_name = mask_name
+
+				mask = np.array(Image.open(os.path.join(root_dir +"masks", big_mask_name +".png")))
+
+				print(path_result + "/"+ fname)
+				result = np.array(Image.open(path_result + "/"+ fname))
+
+				with open(self.location_path + mask_name + ".json" ) as json_file:
+					crop = json.load(json_file)
+
+				mask[crop["bottom"]:crop["top"],crop["left"]:crop["right"]] = result
+				Image.fromarray(mask).save(self.generated_data + mask_name + "_mask.png")
+
 
 
 
 def main() :
+	np.set_printoptions(threshold=sys.maxsize)
 
 	#create data handler from coco dataset
-	os.chdir(os.path.join(os.path.dirname(__file__), "./UAVVaste"))
+	os.chdir(os.path.join(os.path.dirname("/home/ccamille/biowaste_GAN/LSP5_compost/pre_processing.ipynb"), "./UAVVaste"))
 	coco_handler = COCOHandler[COCOAnnotations]("./annotations/annotations.json")
-	data_path = "/home/ccamille/biowaste_GAN/LSP5_compost/UAVVaste/images"
-	camera_names = ["batch_01","batch_02","batch_03","batch_04","batch_05","BATCH_d06","BATCH_d07","BATCH_d08","batch_s01","batch_s02","BATCH_s03","BATCH_s04","BATCH_s05","camera","DJI","GOPR","photo"]
+	data_path = "/home/ccamille/biowaste_GAN/LSP5_compost/UAVVaste/"
+	camera_names = ["batch_01","BATCH_d06","BATCH_d07","BATCH_d08","batch_s01","BATCH_s03","BATCH_s04","BATCH_s05","camera","DJI","GOPR","photo"]
 
 
-	save_path = "/home/ccamille/biowaste_GAN/LSP5_compost/UAVVaste_data/"
-	data = Data_Processing(save_path,size_images=256 )
+	save_path = "/home/ccamille/biowaste_GAN/LSP5_compost/UAVVaste_data_mask_new/"
+	data = Data_Processing(save_path,size_images=256, with_mask = True )
 	data.create_folders()
 	
 	#crop images around plastics
-	data.image_crop (coco_handler, data_path)
-	data.select_big_plastic(min_size = 32)
-	#create noisy data
-	data.replace_plastics_with_noise("b_w")
-	os.makedirs(data.get_image_aligned_path(), exist_ok=True)
-	data.combine_images ()
+	# data.image_crop (coco_handler, data_path)
+	# data.select_big_plastic(min_size = 32)
 	data.split_train_test (camera_names)
 
+	# data.replace_plastics_with_noise("b_w")
+	# os.makedirs(data.get_image_aligned_path(), exist_ok=True)
+	# data.combine_images ()
+	#data.split_train_test (camera_names)
 
 	# #create a test set with just background without plastics
-	save_path_wp = "/home/ccamille/biowaste_GAN/LSP5_compost/UAVVaste_data_wb/"
-	data_test_wp = Data_Processing(save_path_wp,size_images=256 )
-	data_test_wp.create_folders()
-	data_test_wp.select_empty_background (coco_handler, data_path)
-	data_test_wp.replace_plastics_with_noise("b_w")
-	data_test_wp.combine_images ()
+	# save_path_wp = "/home/ccamille/biowaste_GAN/LSP5_compost/UAVVaste_data_mask_empty/"
+	# data_test_wp = Data_Processing(save_path_wp,size_images=256,  with_mask = False  )
+	# data_test_wp.create_folders()
+	# data_test_wp.select_empty_background (coco_handler, data_path)
+	# data_test_wp.replace_plastics_with_noise("b_w")
+	# os.makedirs(data_test_wp.get_image_aligned_path(), exist_ok=True)
+	# # data_test_wp.combine_images ()
 
-	path_result = "/home/ccamille/biowaste_GAN/LSP5_compost/results/biowaste_128_TG1/test_latest/images"
-	data_test_wp.paste_generated_data(path_result, coco_handler,data_path)
+	# path_result = "/home/ccamille/biowaste_GAN/LSP5_compost/results/biowaste_64_TG8b/test_latest/images"
+	# data_test_wp.paste_generated_data(path_result,data_path)
 
 
 

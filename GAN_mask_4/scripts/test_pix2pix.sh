@@ -1,0 +1,3 @@
+python GAN/test.py --dataroot data_preprocessing/tsinghuaDaimlerDataset/images_aligned_crop --name trials --model pix2pix --which_model_netG unet_256 --which_direction BtoA --dataset_mode aligned --norm batch --gpu_ids 0 --display_id 0 --loadSize 542 --fineSize 512
+
+python GAN/test.py --dataroot data_preprocessing/tsinghuaDaimlerDataset/images_aligned_one --name one --model pix2pix --which_model_netG unet_256 --which_direction BtoA --dataset_mode aligned --norm batch --gpu_ids 0 --display_id 0 --loadSize 542 --fineSize 512
