@@ -1,6 +1,6 @@
 # PS-GAN
-This is a Pytorch implementation of PS-GAN network on UAVVaste data. 
-[Pedestrian-Synthesis-GAN](https://github.com/yifanjiang19/Pedestrian-Synthesis-GAN) <br />
+This is a Pytorch implementation of PS-GAN network on UAVVaste data ( credit : 
+[Pedestrian-Synthesis-GAN](https://github.com/yifanjiang19/Pedestrian-Synthesis-GAN) <br /> )
 
 ## Introduction
 
