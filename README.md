@@ -1,9 +1,9 @@
 # PS-GAN
-This is a Pytorch implementation of [Pedestrian-Synthesis-GAN](https://github.com/yifanjiang19/Pedestrian-Synthesis-GAN) on UAVVaste data
+This is a Pytorch implementation of [Pedestrian-Synthesis-GAN](https://github.com/yifanjiang19/Pedestrian-Synthesis-GAN) on UAVVaste dataset.
 
 ## Introduction
 
-We propose a Poisson blending loss that achieves the same purpose of Poisson Image Editing. We jointly optimize the proposed Poisson blending loss with style and content loss computed from a deep network, and reconstruct the blending region by iteratively updating the pixels using the L-BFGS solver. In the blending image, we not only smooth out gradient domain of the blending boundary but also add consistent texture into the blending region.
+We propose a 
 
 ## Usage
 This project uses dominate; start by install dominate and then dependencies
@@ -12,11 +12,11 @@ This project uses dominate; start by install dominate and then dependencies
 pip install dominate
 ```
 
-(opt) This project use visdom to see the training process.
+(opt) This project use visdom for visualization. Run it to see the training process.
 
 ```bash
 pip install visdom
+python -m visdom.server
 ```
-Run python -m visdom.server to see the training process.
 
 ##
