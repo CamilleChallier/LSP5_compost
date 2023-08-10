@@ -3,7 +3,7 @@ This is a Pytorch implementation of [Pedestrian-Synthesis-GAN](https://github.co
 
 ## Introduction
 
-We propose a 
+We propose an augmentation method to generate RGB + mask pairs with a GAN.
 
 ## Usage
 This project uses dominate; start by install dominate and then dependencies
