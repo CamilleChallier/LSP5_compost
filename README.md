@@ -12,4 +12,11 @@ This project uses dominate; start by install dominate and then dependencies
 pip install dominate
 ```
 
+(opt) This project use visdom to see the training process.
+
+```bash
+pip install visdom
+```
+Run python -m visdom.server to see the training process.
+
 ##
