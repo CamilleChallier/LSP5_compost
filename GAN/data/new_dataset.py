@@ -9,6 +9,37 @@ import json
 import cv2
 import numpy as np
 
+def replace_plastics_with_noise(generator,image,bbox,mask, noise_fct):
+    # Iterate over the bounding boxes
+    image = np.array(image)
+
+    roi = image[bbox["y"]:bbox["h"], bbox["x"]:bbox["w"]] 
+
+    if mask : 
+        channel_nb = 4
+    else : 
+        channel_nb =3
+        
+    if (noise_fct == "b_w") :
+        noise = generator.integers(low=0, high=2, size=[roi.shape[0],roi.shape[1]], dtype=np.int64)
+        noise = np.where (noise ==1,255,0)
+        noise = np.repeat(noise[:, :, np.newaxis], channel_nb, axis=2)
+    if ( noise_fct =="color") :
+        noise = generator.integers(0, 256, roi.shape, dtype=np.int64)
+    if (noise_fct == "gaussian") :
+        noise= generator.normal((((128, ) * channel_nb)),((20, ) * channel_nb), size=roi.shape)
+        noise=(noise).astype(np.uint8)
+    if (noise_fct =="gaussian_b_w") :        
+        noise= generator.normal(128,20, size=roi.shape)
+        noise=(noise).astype(np.uint8)
+        noise = np.repeat(noise[:, :, np.newaxis], channel_nb, axis=2)
+        noise = noise.reshape(roi.shape)
+
+    # Replace the ROI with random noise
+    image[bbox["y"]:bbox["h"], bbox["x"]:bbox["w"]] = noise
+
+    return Image.fromarray(image)
+
 
 class NewDataset(BaseDataset):
     """A dataset class for paired image dataset.
@@ -24,7 +55,7 @@ class NewDataset(BaseDataset):
         self.opt = opt
         self.root = opt.dataroot
 
-        self.dir_A = os.path.join(opt.dataroot, 'images', opt.phase, 'real') #phase is train/test/...
+        self.dir_A = os.path.join(opt.dataroot, 'images', opt.phase) #phase is train/test/...
         #self.dir_B = os.path.join(opt.dataroot, 'images', opt.phase, 'noise')
         self.dir_bbox = os.path.join(opt.dataroot, 'bbox', opt.phase)
 
@@ -56,55 +87,57 @@ class NewDataset(BaseDataset):
         #load data
         A_path = self.A_paths[index]
         bbox_path = self.bbox_paths[index]
-        A = Image.open(A_path).convert('RGB')
-        bbox = json.load(open(bbox_path))
 
-        #add noise to image
-        image = cv2.imread(A_path,1)      
-        roi = image[bbox["y"]:bbox["h"], bbox["x"]:bbox["w"]] 
-        noise = np.random.randint(0, 2, size=[roi.shape[0],roi.shape[1]])
-        noise = np.where (noise ==1,255,0)
-        noise = np.repeat(noise[:, :, np.newaxis], 3, axis=2)
-        image[bbox["y"]:bbox["h"], bbox["x"]:bbox["w"]] = noise
-        B_path = A_path.replace('real', 'noise')
-        cv2.imwrite(B_path, image)
-        B = Image.open(B_path).convert('RGB')
+        # #add noise to image
+        # image = cv2.imread(A_path,1)      
+        # roi = image[bbox["y"]:bbox["h"], bbox["x"]:bbox["w"]] 
+        # noise = np.random.randint(0, 2, size=[roi.shape[0],roi.shape[1]])
+        # noise = np.where (noise ==1,255,0)
+        # noise = np.repeat(noise[:, :, np.newaxis], 3, axis=2)
+        # image[bbox["y"]:bbox["h"], bbox["x"]:bbox["w"]] = noise
+        # B_path = A_path.replace('real', 'noise')
+        # cv2.imwrite(B_path, image)
+        # B = Image.open(B_path).convert('RGB')
 
         #compute offset
-        h = self.opt.loadSize
-        h2 = self.opt.fineSize
-        w_offset = random.randint(0, max(0, h - h2 - 1))
-        h_offset = random.randint(0, max(0, h - h2 - 1))
+        l = self.opt.loadSize
+        f = self.opt.fineSize
+        w_offset = random.randint(0, max(0, l - f - 1))
+        h_offset = random.randint(0, max(0, l - f - 1))
+
+        bbox = json.load(open(bbox_path))
+        A = Image.open(A_path).convert('RGB')
         
         #resize
         size_x = A.size[0]
         size_y = A.size[1]
-        bbox = {"y":int(bbox["y"]*h2/size_y),"x" : int(bbox["x"]*h2/size_x), "w" : int(bbox["w"]*h2/size_x), "h" : int(bbox["h"]*h2/size_y)}
+        bbox = {"y":int(bbox["y"]*f/size_y),"x" : int(bbox["x"]*f/size_x), "w" : int(bbox["w"]*f/size_x), "h" : int(bbox["h"]*f/size_y)}
         bbox_x = max(int((bbox['x']/self.opt.fineSize)*self.opt.loadSize), 0)
         bbox_y = max(int((bbox['y']/self.opt.fineSize)*self.opt.loadSize), 0)
         bbox_w = max(int((bbox['w']/self.opt.fineSize)*self.opt.loadSize), 0)
         bbox_h = max(int((bbox['h']/self.opt.fineSize)*self.opt.loadSize), 0)
 
-        if bbox_y <= h_offset or bbox_x <= w_offset or bbox_h <= h_offset or bbox_w <= w_offset or bbox_y >= h_offset + size_y or bbox_x >= w_offset +size_x/2 or bbox_h >= h_offset +size_y or bbox_w >= w_offset + size_x/2  :
-
-        #AB = Image.open(AB_path).convert('RGB')
+        if not(self.opt.isTrain) or bbox_y <= h_offset or bbox_x <= w_offset or bbox_h <= h_offset or bbox_w <= w_offset or bbox_y >= h_offset + size_y or bbox_x >= w_offset +size_x/2 or bbox_h >= h_offset +size_y or bbox_w >= w_offset + size_x/2  :
             A = A.resize((self.opt.fineSize, self.opt.fineSize), Image.BICUBIC)
+            generator = np.random.default_rng(seed=index)
+            B = replace_plastics_with_noise(generator,A,bbox,False,"b_w")
             A = self.transform(A)
-            B = B.resize((self.opt.fineSize, self.opt.fineSize), Image.BICUBIC)
             B = self.transform(B)
+            A = A[:, :self.opt.fineSize,:self.opt.fineSize]
+            B = B[:, :self.opt.fineSize,:self.opt.fineSize]
+
             bbox = [bbox['y'], bbox['x'], bbox['w'], bbox['h']]
 
         else:
-            A = A.resize((self.opt.loadSize * 2, self.opt.loadSize), Image.BICUBIC)
+            A = A.resize((self.opt.loadSize, self.opt.loadSize), Image.BICUBIC)
+            bbox = {"y":bbox_y,"x" : bbox_x, "w" : bbox_w, "h" : bbox_h}
+            B = replace_plastics_with_noise(A,bbox,False,"b_w")
             A = self.transform(A)
-            B = B.resize((self.opt.loadSize * 2, self.opt.loadSize), Image.BICUBIC)
             B = self.transform(B)
             A = A[:, h_offset:h_offset + self.opt.fineSize,
                w_offset:w_offset + self.opt.fineSize]
-            
             B = B[:, h_offset:h_offset + self.opt.fineSize,
-                w_offset:w_offset + self.opt.fineSize]
-            
+               w_offset:w_offset + self.opt.fineSize]
             bbox = [bbox_y-h_offset, bbox_x-w_offset, bbox_w-w_offset, bbox_h-h_offset]
         
 
@@ -113,11 +146,10 @@ class NewDataset(BaseDataset):
             idx = torch.LongTensor(idx)
             A = A.index_select(2, idx)
             B = B.index_select(2, idx)
-            #print A.size(2)
             bbox = [bbox[0], A.size(2) - bbox[2], A.size(2) - bbox[1], bbox[3]]
         # print(bbox)
         return {'A': A, 'B': B, 'bbox': bbox,
-                'A_paths': A_path, 'B_paths': B_path}
+                'A_paths': A_path}
 
     def __len__(self):
         """Return the total number of images in the dataset."""

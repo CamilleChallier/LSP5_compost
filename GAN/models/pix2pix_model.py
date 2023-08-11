@@ -98,7 +98,7 @@ class Pix2PixModel(BaseModel):
         self.input_B.resize_(input_B.size()).copy_(input_B)
         #print("set_input", self.input_B.shape)
 
-        self.image_paths = input['A_paths' if AtoB else 'B_paths']
+        self.image_paths = input['A_paths'] #if AtoB else 'B_paths']
 
     def forward(self):
 

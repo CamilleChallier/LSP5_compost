@@ -22,6 +22,8 @@ from util.visualizer import Visualizer
 opt = TrainOptions().parse() # creation of a BaseOptions objet with all the arguments of BaseOptions+TrainOptions. Run parse fct 
 data_loader = CreateDataLoader(opt) #create a CustomDatasetDataLoader object with all paths and transformations
 dataset = data_loader.load_data()
+print(".....................................")
+print(dataset)
 dataset_size = len(data_loader) # get the number of images in the dataset.
 print('#training images = %d' % dataset_size)
 model = create_model(opt) # create a model given opt.model and other options
@@ -37,18 +39,12 @@ print(step_opti_G)
 for epoch in range(1, opt.niter + opt.niter_decay + 1): # outer loop for different epochs; we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>
     epoch_start_time = time.time() # timer for entire epoch
     for i, data in enumerate(dataset):  # inner loop within one epoch
-        #print(i, data["A"].shape)
+
         iter_start_time = time.time() # timer for computation per iteration
         total_steps += opt.batchSize
         epoch_iter = total_steps - dataset_size * (epoch - 1)
-        # y,x,w,h = data['bbox']
-        # if w[0]-x[0] < 39:
-        #     continue
+ 
         model.set_input(data)
-#         if iter_d <= CRITIC_ITERS-1:
-#             only_d = False
-#         else:
-#             only_d = False
 
         if opt.model == "pix2pix" :
             model.optimize_parameters_D() # calculate loss functions, get gradients, update network weights

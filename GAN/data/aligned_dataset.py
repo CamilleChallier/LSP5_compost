@@ -57,7 +57,6 @@ class AlignedDataset(BaseDataset):
         w_offset = random.randint(0, max(0, w - self.opt.fineSize - 1))
         h_offset = random.randint(0, max(0, h - self.opt.fineSize - 1))
         #print(w_offset,h_offset)
-
         bbox = json.load(open(bbox_path))
         #6 lines added
         AB = Image.open(AB_path).convert('RGB')
@@ -71,7 +70,7 @@ class AlignedDataset(BaseDataset):
         bbox_w = max(int((bbox['w']/self.opt.fineSize)*self.opt.loadSize), 0)
         bbox_h = max(int((bbox['h']/self.opt.fineSize)*self.opt.loadSize), 0)
 
-        if bbox_y <= h_offset or bbox_x <= w_offset or bbox_h <= h_offset or bbox_w <= w_offset or bbox_y >= h_offset + size_y or bbox_x >= w_offset +size_x/2 or bbox_h >= h_offset +size_y or bbox_w >= w_offset + size_x/2  :
+        if not(self.opt.isTrain) or bbox_y <= h_offset or bbox_x <= w_offset or bbox_h <= h_offset or bbox_w <= w_offset or bbox_y >= h_offset + size_y or bbox_x >= w_offset +size_x/2 or bbox_h >= h_offset +size_y or bbox_w >= w_offset + size_x/2  :
             AB = AB.resize((self.opt.fineSize * 2, self.opt.fineSize), Image.BICUBIC)
             AB = self.transform(AB)
             A = AB[:, :self.opt.fineSize,
@@ -84,6 +83,7 @@ class AlignedDataset(BaseDataset):
         else:
 
             AB = AB.resize((self.opt.loadSize * 2, self.opt.loadSize), Image.BICUBIC)
+            print("resize")
             AB = self.transform(AB)
             A = AB[:, h_offset:h_offset + self.opt.fineSize,
                 w_offset:w_offset + self.opt.fineSize]

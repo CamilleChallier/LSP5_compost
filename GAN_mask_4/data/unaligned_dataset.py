@@ -24,9 +24,6 @@ class UnalignedDataset(BaseDataset):
         self.dir_A = os.path.join(opt.dataroot,"images", opt.phase + 'A') #specific folder trainA
         self.dir_B = os.path.join(opt.dataroot, "images", opt.phase + 'B')
         self.dir_bbox = os.path.join(opt.dataroot, 'bbox', opt.phase)
-
-        # self.A_paths = make_dataset(self.dir_A)
-        # self.B_paths = make_dataset(self.dir_B)
         
         self.A_paths, self.bbox_paths = make_dataset(self.dir_A, self.dir_bbox)
         self.B_paths, self.bbox_paths = make_dataset(self.dir_B, self.dir_bbox)

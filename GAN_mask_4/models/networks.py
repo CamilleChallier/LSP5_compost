@@ -423,8 +423,7 @@ class SPP_NET(nn.Module):
         self.LReLU4 = nn.LeakyReLU(0.2, inplace=True)
 
         self.conv5 = nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False)
-        # print('hehe')
-        # print(use_sigmoid)
+
         self.use_sigmoid = use_sigmoid
         if self.use_sigmoid:
             self.ac = nn.Sigmoid()
@@ -442,65 +441,40 @@ class SPP_NET(nn.Module):
     
         returns: a tensor vector with shape [1 x n] is the concentration of multi-level pooling
         '''    
-        # print(previous_conv.size())
         for i in range(len(out_pool_size)):
-            # print(previous_conv_size)
 
             h_wid = int(math.ceil(previous_conv_size[0] / out_pool_size[i]))
             w_wid = int(math.ceil(previous_conv_size[1] / out_pool_size[i]))
 
-            #h_pad = (h_wid*out_pool_size[i] - previous_conv_size[0] + 1)/2
             h_pad = math.ceil((h_wid*out_pool_size[i] - previous_conv_size[0])/2)
-            #w_pad = (w_wid*out_pool_size[i] - previous_conv_size[1] + 1)/2
             w_pad = math.ceil((w_wid*out_pool_size[i] - previous_conv_size[1])/2)
-            #print("gg",previous_conv_size[0],out_pool_size[i], h_wid,h_pad )
-            #print("gk",previous_conv_size[1],out_pool_size[i], w_wid,w_pad )
             
-            #print("maxpool", h_wid, w_wid, h_pad, w_pad)
             maxpool = nn.MaxPool2d((h_wid, w_wid), stride=(h_wid, w_wid), padding=(h_pad, w_pad))
             x = maxpool(previous_conv)
-            #print(x.shape)
             if(i == 0):
                 spp = x.view(num_sample,-1)
-                # print("spp size:",spp.size())
             else:
-                # print("size:",spp.size())
                 spp = torch.cat((spp,x.view(num_sample,-1)), 1)
         return spp
 
     def forward(self,x):
-        #print(x.shape)
         x = self.conv1(x)
         x = self.LReLU1(x)
 
         x = self.conv2(x)
-        #x = F.leaky_relu(self.BN1(x))
         x = self.LReLU2(self.BN1(x))
 
         x = self.conv3(x)
-        #x = F.leaky_relu(self.BN2(x))
         x = self.LReLU3(self.BN2(x))
         
         x = self.conv4(x)
-        # x = F.leaky_relu(self.BN3(x))
         x = self.LReLU4(self.BN3(x))
 
         x = self.conv5(x)
-        #print(x.size())
         spp = self.spatial_pyramid_pool(x,1,[int(x.size(2)),int(x.size(3))],self.output_num)
-        # fc1 = self.fc1(spp)
-        # fc2 = self.fc2(fc1)
-        # s = nn.Sigmoid()
-        # output = s(fc2)
-        #print(spp)
-        #out = F.leaky_relu(spp)
-        #out = F.relu(spp)
-        #out = self.output(spp.view(x.size(0), -1))
         if self.use_sigmoid:
             out = self.ac(spp)
         else:
             out = spp
-        #self.output = nn.Linear(30*30*1, 1)
 
-        #return output.mean(0).view(-1)
         return out

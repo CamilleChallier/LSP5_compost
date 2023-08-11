@@ -36,6 +36,7 @@ def replace_plastics_with_noise(generator,image,bbox,mask, noise_fct):
         noise = noise.reshape(roi.shape)
 
     # Replace the ROI with random noise
+    
     image[bbox["y"]:bbox["h"], bbox["x"]:bbox["w"]] = noise
 
     return Image.fromarray(image)
@@ -90,10 +91,8 @@ class NewDataset(BaseDataset):
         self.root = opt.dataroot
 
         self.dir_A = os.path.join(opt.dataroot, 'images', opt.phase) #phase is train/test/...
-        #self.dir_B = os.path.join(opt.dataroot, 'images', opt.phase, 'noise')
         self.dir_bbox = os.path.join(opt.dataroot, 'bbox', opt.phase)
 
-        #self.AB_paths, self.bbox_paths = sorted(make_dataset(self.dir_AB, self.dir_bbox))
         self.A_paths, self.bbox_paths = make_dataset(self.dir_A, self.dir_bbox)
         self.A_paths = sorted(self.A_paths)
         self.bbox_paths = sorted(self.bbox_paths)
@@ -105,6 +104,7 @@ class NewDataset(BaseDataset):
                                                ((0.5, ) * opt.input_nc))] # list that holds the defined transformations. In this case, it contains the ToTensor() transformation and the Normalize() transformation.
 
         self.transform = transforms.Compose(transform_list) #applies each transformation in the list to the data in the order they are defined
+
 
     def __getitem__(self, index):
         """Return a data point and its metadata information.
@@ -144,7 +144,7 @@ class NewDataset(BaseDataset):
             A = A.resize((self.opt.fineSize, self.opt.fineSize), Image.BICUBIC)
             generator = np.random.default_rng(seed=index)
             B = replace_plastics_with_noise(generator,A,bbox,self.opt.mask,"b_w")
-            #B = replace_plastics_with_noise1(A,bbox,self.opt.mask,"b_w")
+
             A = self.transform(A)
             B = self.transform(B)
             A = A[:, :self.opt.fineSize,:self.opt.fineSize]
@@ -167,7 +167,6 @@ class NewDataset(BaseDataset):
             bbox = {"y":bbox_y,"x" : bbox_x, "w" : bbox_w, "h" : bbox_h}
             generator = np.random.default_rng(seed=index)
             B = replace_plastics_with_noise(generator,A,bbox,self.opt.mask,"b_w")
-            #B = replace_plastics_with_noise1(A,bbox,self.opt.mask,"b_w")
             A = self.transform(A)
             B = self.transform(B)
             A = A[:, h_offset:h_offset + self.opt.fineSize,

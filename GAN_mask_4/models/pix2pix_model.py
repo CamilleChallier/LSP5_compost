@@ -60,9 +60,6 @@ class Pix2PixModel(BaseModel):
         if self.isTrain:
             self.fake_AB_pool = ImagePool(opt.pool_size)
             self.old_lr = opt.lr
-            # define loss functions
-            #print('haha'+ str(opt.no_lsgan))
-            # self.criterionGAN = networks.GANLoss(use_lsgan=not opt.no_lsgan, tensor=self.Tensor)
             self.criterionGAN_image = networks.GANLoss(use_lsgan=not opt.no_lsgan, tensor=self.Tensor)
             self.criterionGAN_person = networks.GANLoss(use_lsgan=opt.no_lsgan, tensor=self.Tensor)
             self.criterionL1 = torch.nn.L1Loss()
@@ -97,7 +94,6 @@ class Pix2PixModel(BaseModel):
         
         self.input_A.resize_(input_A.size()).copy_(input_A)
         self.input_B.resize_(input_B.size()).copy_(input_B)
-        #print("set_input", self.input_B.shape)
 
         self.image_paths = input['A_paths' ]#if AtoB else 'B_paths']
 
@@ -108,7 +104,6 @@ class Pix2PixModel(BaseModel):
 
         y,x,w,h = self.bbox
         self.person_crop_real = self.real_B[:,:,y[0]:h[0],x[0]:w[0]]
-        #print("CA",self.person_crop_real.shape)
         self.person_crop_fake = self.fake_B[:,:,y[0]:h[0],x[0]:w[0]]
 
     # no backprop gradients
@@ -131,13 +126,11 @@ class Pix2PixModel(BaseModel):
         # stop backprop to the generator by detaching fake_B
         fake_AB = self.fake_AB_pool.query(torch.cat((self.real_A, self.fake_B), 1))
         self.pred_fake = self.netD_image.forward(fake_AB.detach())
-        # self.loss_D_image_fake = self.criterionGAN(self.pred_fake, False)
         self.loss_D_image_fake = self.criterionGAN_image(self.pred_fake, False)
 
         # Real
         real_AB = torch.cat((self.real_A, self.real_B), 1)
         self.pred_real = self.netD_image.forward(real_AB)
-        # self.loss_D_image_real = self.criterionGAN(self.pred_real, True)
         self.loss_D_image_real = self.criterionGAN_image(self.pred_real, True)
 
         # Combined loss
@@ -148,12 +141,10 @@ class Pix2PixModel(BaseModel):
     def backward_D_person(self):
         #Fake
         self.person_fake = self.netD_person.forward(self.person_crop_fake)
-        # self.loss_D_person_fake = self.criterionGAN(self.person_fake, False)
         self.loss_D_person_fake = self.criterionGAN_person(self.person_fake, False)
 
         #Real
         self.person_real = self.netD_person.forward(self.person_crop_real)
-        # self.loss_D_person_real = self.criterionGAN(self.person_real, True)
         self.loss_D_person_real = self.criterionGAN_person(self.person_real, True)
 
         #Combine loss
@@ -167,17 +158,12 @@ class Pix2PixModel(BaseModel):
         # discriminator1
         fake_AB = torch.cat((self.real_A, self.fake_B), 1)
         pred_fake_image = self.netD_image.forward(fake_AB)
-        # self.loss_G_GAN_image = self.criterionGAN(pred_fake_image, True)
         self.loss_G_GAN_image = self.criterionGAN_image(pred_fake_image, True)
         # Second, G(A) = B
         self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_A
-        #self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B)
 
         pred_fake_person = self.netD_person.forward(self.person_crop_fake)
-        # self.loss_G_GAN_person = self.criterionGAN(pred_fake_person, True)
         self.loss_G_GAN_person = self.criterionGAN_person(pred_fake_person, True)
-
-        #self.loss_G_L1_person = self.criterionL1(self.person_crop_fake, self.person_crop_real)
 
 
         self.loss_G = self.loss_G_GAN_image + self.loss_G_L1 + self.loss_G_GAN_person
@@ -204,16 +190,6 @@ class Pix2PixModel(BaseModel):
             self.optimizer_G.step()
 
     def get_current_errors(self):
-
-        # return OrderedDict([('G_GAN_image', self.loss_G_GAN_image.data[0]),
-        #                     ('G_GAN_person', self.loss_G_GAN_person.data[0]),
-        #                     ('G_L1', self.loss_G_L1.data[0]),
-        #                     #('G_L1_person', self.loss_G_L1_person.data[0]),
-        #                     ('D_image_real', self.loss_D_image_real.data[0]),
-        #                     ('D_image_fake', self.loss_D_image_fake.data[0]),
-        #                     ('D_person_real', self.loss_D_person_real.data[0]),
-        #                     ('D_person_fake', self.loss_D_person_fake.data[0])
-        #                     ])
         return OrderedDict([('G_GAN_image', self.loss_G_GAN_image.data),
                             ('G_GAN_person', self.loss_G_GAN_person.data),
                             ('G_L1', self.loss_G_L1.data),

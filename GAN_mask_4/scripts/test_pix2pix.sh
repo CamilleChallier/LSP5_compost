@@ -1,3 +1,1 @@
-python GAN/test.py --dataroot data_preprocessing/tsinghuaDaimlerDataset/images_aligned_crop --name trials --model pix2pix --which_model_netG unet_256 --which_direction BtoA --dataset_mode aligned --norm batch --gpu_ids 0 --display_id 0 --loadSize 542 --fineSize 512
-
-python GAN/test.py --dataroot data_preprocessing/tsinghuaDaimlerDataset/images_aligned_one --name one --model pix2pix --which_model_netG unet_256 --which_direction BtoA --dataset_mode aligned --norm batch --gpu_ids 0 --display_id 0 --loadSize 542 --fineSize 512
+python GAN_mask_4/test.py  -dataroot /home/ccamille/biowaste_GAN/LSP5_compost/UAVVaste_data_mask --name biowaste_mn_one_TG3 --model pix2pix --which_model_netG unet_256 --which_direction BtoA --dataset_mode new --norm batch --gpu_ids 0 --display_id 1 --input_nc 4 --output_nc 4 --n_layers_D 4 --mask True
