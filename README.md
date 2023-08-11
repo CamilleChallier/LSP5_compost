@@ -24,7 +24,7 @@ python main.py
 
 | Path | Description
 | :--- | :----------
-| PS_GAN | Repository root folder of the uavvaste GAN project.
+| LSP5_compost | Repository root folder of the uavvaste GAN project.
 | &boxvr;&nbsp; checkpoints | Folder with saved training experiment.
 | &boxvr;&nbsp; coco_api | contains dataclasses and utilities for loading, structuring and accessing annotations in COCO format.
 | &boxvr;&nbsp; GAN | Folder with the GAN algorithm.
