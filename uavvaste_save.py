@@ -68,7 +68,7 @@ class Data_Processing():
 		os.makedirs(self.get_location_path(), exist_ok=True)
 	
 	def image_crop (self, handler, root_dir) :
-		for img_name in handler.img_name_list[0:1]: 
+		for img_name in handler.img_name_list: 
 			
 			image = handler.load_image(root_dir + "images", img_name = img_name)
 
@@ -360,26 +360,25 @@ class Data_Processing():
 				Image.fromarray(mask).save(self.generated_data + mask_name + "_mask.png")
 
 
-
-
 def main() :
 	np.set_printoptions(threshold=sys.maxsize)
 
 	#create data handler from coco dataset
-	os.chdir(os.path.join(os.path.dirname("/home/ccamille/biowaste_GAN/LSP5_compost/pre_processing.ipynb"), "./UAVVaste"))
+	os.chdir(os.path.join(os.path.dirname(__file__), "./UAVVaste"))
+	print(os.path.join(os.path.dirname(__file__), "./UAVVaste"))
 	coco_handler = COCOHandler[COCOAnnotations]("./annotations/annotations.json")
 	data_path = "/home/ccamille/biowaste_GAN/LSP5_compost/UAVVaste/"
-	camera_names = ["batch_01","BATCH_d06","BATCH_d07","BATCH_d08","batch_s01","BATCH_s03","BATCH_s04","BATCH_s05","camera","DJI","GOPR","photo"]
+	camera_names = ["batch_01","batch_02","batch_03","batch_04","batch_05","BATCH_d06","BATCH_d07","BATCH_d08","batch_s01","batch_s02","BATCH_s03","BATCH_s04","BATCH_s05","camera","DJI","GOPR","photo"]
 
 
-	save_path = "/home/ccamille/biowaste_GAN/LSP5_compost/UAVVaste_data_mask_new/"
+	save_path = "/home/ccamille/biowaste_GAN/LSP5_compost/UAVVaste_data_mask/"
 	data = Data_Processing(save_path,size_images=256, with_mask = True )
-	data.create_folders()
+	# data.create_folders()
 	
-	#crop images around plastics
+	# # #crop images around plastics
 	# data.image_crop (coco_handler, data_path)
 	# data.select_big_plastic(min_size = 32)
-	data.split_train_test (camera_names)
+	# data.split_train_test (camera_names)
 
 	# data.replace_plastics_with_noise("b_w")
 	# os.makedirs(data.get_image_aligned_path(), exist_ok=True)
@@ -391,12 +390,12 @@ def main() :
 	# data_test_wp = Data_Processing(save_path_wp,size_images=256,  with_mask = False  )
 	# data_test_wp.create_folders()
 	# data_test_wp.select_empty_background (coco_handler, data_path)
-	# data_test_wp.replace_plastics_with_noise("b_w")
-	# os.makedirs(data_test_wp.get_image_aligned_path(), exist_ok=True)
-	# # data_test_wp.combine_images ()
+	# #data_test_wp.replace_plastics_with_noise("b_w")
+	#os.makedirs(data_test_wp.get_image_aligned_path(), exist_ok=True)
+	# data_test_wp.combine_images ()
 
-	# path_result = "/home/ccamille/biowaste_GAN/LSP5_compost/results/biowaste_64_TG8b/test_latest/images"
-	# data_test_wp.paste_generated_data(path_result,data_path)
+	path_result = "/home/ccamille/biowaste_GAN/LSP5_compost/results/biowaste_mn_all_TG1/test_latest/images"
+	data.paste_generated_data(path_result,data_path)
 
 
 
