@@ -39,20 +39,12 @@ class Data_Processing():
 		self.full_images_path = save_path + "images/"
 		self.bbox_path = save_path + "bbox/"
 		self.location_path = save_path + "location/"
-		#self.noise_path = save_path + "images_noise/"
-		#self.image_aligned_path = save_path + "images/"
 		self.generated_data = save_path +"generated_data/"
 		self.size_images = size_images
 		self.with_mask = with_mask
 	
 	def get_full_images_path(self) :
 		return self.full_images_path
-    
-	# def get_noise_path(self) :
-	# 	return self.noise_path
-    
-	# def get_image_aligned_path(self) :
-	# 	return self.image_aligned_path
 
 	def get_bbox_path(self) :
 		return self.bbox_path
@@ -62,9 +54,7 @@ class Data_Processing():
 
 	def create_folders(self) :
 		os.makedirs(self.get_bbox_path(), exist_ok=True)
-		#os.makedirs(self.get_noise_path(), exist_ok=True)
 		os.makedirs(self.get_full_images_path(), exist_ok=True)
-		# os.makedirs(self.get_image_aligned_path(), exist_ok=True)
 		os.makedirs(self.get_location_path(), exist_ok=True)
 	
 	def image_crop (self, handler, root_dir) :
@@ -91,13 +81,12 @@ class Data_Processing():
 				factor = 1
 
 				while size_bbox[0] > self.size_images or size_bbox[1] > self.size_images :
-					#print("image_too_large")
 					img = img.resize((int(width/2),int(height/2)), Image.BICUBIC)
 					factor *=2
 					bbox = {"y": int(bbox["y"]/2), "x": int(bbox["x"]/2), "w": int(bbox["w"]/2), "h": int(bbox["h"]/2)}
 					size_bbox = [bbox["h"]-bbox["y"], bbox["w"]-bbox["x"]]
 					width, height = img.size
-				#print(size_bbox)
+
 				left = bbox["x"]+int(int(size_bbox[1]/2)-self.size_images/2)
 				top = bbox["y"]+int(int(size_bbox[0]/2)+self.size_images/2)
 				right = bbox["x"]+int(int(size_bbox[1]/2)+self.size_images/2)
@@ -124,7 +113,6 @@ class Data_Processing():
 					bottom = 0
 					top = top + diff
 
-				#print(left-right,top-bottom)
 				bbox = {"y": bbox["y"]-bottom, "x": bbox["x"]-left, "w": bbox["w"]-left, "h": bbox["h"]-bottom}
 
 				img = img.crop((left,bottom,right,top))
@@ -179,8 +167,10 @@ class Data_Processing():
 			
 			bbox = {"y": y, "x": x , "w": x + w , "h": y +h}
 
-			im_path = self.full_images_path + img_name + ".png"
-			bbox_path = self.bbox_path + img_name + ".json"
+			os.makedirs(self.full_images_path + "test/", exist_ok=True)
+			os.makedirs(self.bbox_path + "test/", exist_ok=True)
+			im_path = self.full_images_path + "test/"+ img_name + ".png"
+			bbox_path = self.bbox_path + "test/" + img_name + ".json"
 			location_path = self.location_path + img_name + ".json"
 
 			img.save(im_path)
@@ -201,16 +191,7 @@ class Data_Processing():
 
 				size_bbox = [int(bbox["h"])-int(bbox["y"]), int(bbox["w"])-int(bbox["x"])] 
 
-				if size_bbox[0]<min_size or size_bbox[1]<min_size : # w:25 et h:70 in the paper
-				#if size_bbox[0]<26 or size_bbox[1]<26 or size_bbox[0] in [47,46,39,38,33,32,31,30] or size_bbox[1] in [47,46,39,38,33,32,31,30] :
-					# 39/38 : 13 : 2/4 ok
-					# 37/36 : 12 : 0/3 ok
-					# 35/34 : 11 : 1/3 ok
-					# 33/32 : 10 : 1/3 ok
-					# 31/30 : 9 : 2/3 non
-					# 29/28 : 8 : 0/2 ok
-					# 27/26 : 7 : 1/2 ok
-					# 25/24 : 6 : 1/2 ok
+				if size_bbox[0]<min_size or size_bbox[1]<min_size :
 					i +=1
 					os.remove(self.bbox_path+ os.path.splitext(fname)[0] + ".json")
 					os.remove(self.full_images_path+ fname)
@@ -254,14 +235,6 @@ class Data_Processing():
 
 				# Replace the ROI with random noise
 				image[bbox["y"]:bbox["h"], bbox["x"]:bbox["w"]] = noise
-
-				# print(noise[:,:,1])
-				# plt.imshow(noise[:,:,0:3])
-				# plt.show()
-
-				
-				# plt.imshow(image[:,:,0:3])
-				# plt.show()
 
 				im_path = self.noise_path + fname
 				Image.fromarray(image).save(im_path)
@@ -373,31 +346,24 @@ def main() :
 
 	save_path = "/home/ccamille/biowaste_GAN/LSP5_compost/UAVVaste_data_mask/"
 	data = Data_Processing(save_path,size_images=256, with_mask = True )
-	# data.create_folders()
+	data.create_folders()
 	
-	# # #crop images around plastics
-	# data.image_crop (coco_handler, data_path)
-	# data.select_big_plastic(min_size = 32)
-	# data.split_train_test (camera_names)
+	#Part 1
+	# create the training/testing dataset : crop images around plastics
+	data.image_crop (coco_handler, data_path)
+	data.select_big_plastic(min_size = 32)
+	data.split_train_test (camera_names)
 
-	# data.replace_plastics_with_noise("b_w")
-	# os.makedirs(data.get_image_aligned_path(), exist_ok=True)
-	# data.combine_images ()
-	#data.split_train_test (camera_names)
-
-	# #create a test set with just background without plastics
+	# Part 2
+	# create a test set with just background without plastics
 	# save_path_wp = "/home/ccamille/biowaste_GAN/LSP5_compost/UAVVaste_data_mask_empty/"
 	# data_test_wp = Data_Processing(save_path_wp,size_images=256,  with_mask = False  )
 	# data_test_wp.create_folders()
 	# data_test_wp.select_empty_background (coco_handler, data_path)
-	# #data_test_wp.replace_plastics_with_noise("b_w")
-	#os.makedirs(data_test_wp.get_image_aligned_path(), exist_ok=True)
-	# data_test_wp.combine_images ()
 
-	path_result = "/home/ccamille/biowaste_GAN/LSP5_compost/results/biowaste_mn_all_TG1/test_latest/images"
-	data.paste_generated_data(path_result,data_path)
-
-
+	# Part 3
+	# path_result = "/home/ccamille/biowaste_GAN/LSP5_compost/results/biowaste_mn_all_TG1/test_latest/images"
+	# data.paste_generated_data(path_result,data_path)
 
 if __name__ == "__main__":
 	main()
