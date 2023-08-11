@@ -6,16 +6,10 @@ This is a Pytorch implementation of [Pedestrian-Synthesis-GAN](https://github.co
 We propose an augmentation method to generate RGB + mask pairs with a GAN.
 
 ## Usage
-This project uses dominate; start by install dominate and then dependencies.
+
+This project use visdom for visualization. Run it to see the training process.
 
 ```bash
-pip install dominate
-```
-
-(opt) This project use visdom for visualization. Run it to see the training process.
-
-```bash
-pip install visdom
 python -m visdom.server
 ```
 
@@ -26,6 +20,7 @@ python -m visdom.server
 | :--- | :----------
 | PS_GAN | Repository root folder of the uavvaste GAN project.
 | &boxvr;&nbsp; checkpoints | Folder with saved training experiment.
+| &boxvr;&nbsp; coco_api | contains dataclasses and utilities for loading, structuring and accessing annotations in COCO format.
 | &boxvr;&nbsp; GAN_mask | Folder with the GAN algorithm.
 | &boxv;&nbsp; &boxvr;&nbsp; data | Folder with dataset loader and data pre-processing.
 | &boxv;&nbsp; &boxvr;&nbsp; &boxvr;&nbsp; base_data_loader.py | Base class for defining different dataloaders.
