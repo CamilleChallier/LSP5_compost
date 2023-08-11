@@ -31,6 +31,7 @@ python main.py
 | &boxvr;&nbsp; GAN_mask | Folder with the GAN algorithm adapted for 4 channels images.
 | &boxvr;&nbsp; results | Saved trained models
 | &boxvr;&nbsp; analysis.ipynb | Observe similarities between generated images and the training set.
-| &boxvr;&nbsp; pre_processing.ipynb | Draft.
+| &boxvr;&nbsp; pre_processing.ipynb | Draft. 
+| &boxvr;&nbsp; Generating_data_with_GAN.pdf | Presentation of the project.
 | &boxvr;&nbsp; README.py | Description and requirement of the project.
 | &boxur;&nbsp; uavvaste_save.py | Do all the pre-processing steps.
